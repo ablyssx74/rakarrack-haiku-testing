@@ -50,7 +50,7 @@ public:
   float *octoutr;
   float outvolume;
   
-//private:
+private:
   //Parametrii
   int Pvolume;	//Volumul or E/R
   int Ppanning;	//Panning
