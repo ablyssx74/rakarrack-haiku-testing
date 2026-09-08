@@ -69,6 +69,52 @@
 // like rakverb, but gets overridden by the real one in the main app.
 __attribute__((weak)) void RKR::calculavol(int i) { }
 
+// haiku_native/haiku-rakarrack.o gets linked into more than just the main
+// "rakarrack" binary: the automake build also links it into the small
+// standalone utilities in extra/ (rakverb, rakverb2, rakconvert,
+// rakgit2new) via the shared $(LIBS) variable in haiku.makefile. Those
+// utilities only build their own tiny .C file plus this one -- none of
+// src/*.o (Distorsion.o, Echo.o, ...) is part of their link. Since this
+// file now drives every effect through its real changepar()/getpar() (or
+// Compressor_Change()/Gate_Change()) API instead of poking members
+// directly, the linker needs *something* to resolve those symbols to when
+// building those utilities. These weak fallbacks are never actually
+// reached at runtime there (those tools never call
+// start_haiku_native_interface()); the strong definitions in src/*.C
+// silently take over whenever this is linked into the real app, exactly
+// like the RKR::calculavol() stub above already does.
+__attribute__((weak)) void RKR::cleanup_efx() { }
+
+#define RKR_HAIKU_WEAK_CHANGEPAR(EffectClass) \
+	__attribute__((weak)) void EffectClass::changepar(int, int) { } \
+	__attribute__((weak)) int EffectClass::getpar(int) { return 0; }
+
+RKR_HAIKU_WEAK_CHANGEPAR(Distorsion)
+RKR_HAIKU_WEAK_CHANGEPAR(NewDist)
+RKR_HAIKU_WEAK_CHANGEPAR(Echo)
+RKR_HAIKU_WEAK_CHANGEPAR(Reverb)
+RKR_HAIKU_WEAK_CHANGEPAR(EQ)
+RKR_HAIKU_WEAK_CHANGEPAR(Chorus)
+RKR_HAIKU_WEAK_CHANGEPAR(Phaser)
+RKR_HAIKU_WEAK_CHANGEPAR(Analog_Phaser)
+RKR_HAIKU_WEAK_CHANGEPAR(DynamicFilter)
+RKR_HAIKU_WEAK_CHANGEPAR(Alienwah)
+RKR_HAIKU_WEAK_CHANGEPAR(Valve)
+RKR_HAIKU_WEAK_CHANGEPAR(Ring)
+RKR_HAIKU_WEAK_CHANGEPAR(Sustainer)
+RKR_HAIKU_WEAK_CHANGEPAR(StompBox)
+RKR_HAIKU_WEAK_CHANGEPAR(Exciter)
+RKR_HAIKU_WEAK_CHANGEPAR(Vibe)
+RKR_HAIKU_WEAK_CHANGEPAR(Opticaltrem)
+RKR_HAIKU_WEAK_CHANGEPAR(Pan)
+
+#undef RKR_HAIKU_WEAK_CHANGEPAR
+
+__attribute__((weak)) void Compressor::Compressor_Change(int, int) { }
+__attribute__((weak)) int Compressor::getpar(int) { return 0; }
+__attribute__((weak)) void Gate::Gate_Change(int, int) { }
+__attribute__((weak)) int Gate::getpar(int) { return 0; }
+
 
 extern pthread_mutex_t jmutex;
 
